@@ -1,10 +1,7 @@
 # Virtual environment
+venv
 .venv/
-venv/
-env/
-
-# IDE-specific files
-.vscode/
-.idea/
-
-.git/
+.idea
+__pycache__
+.env
+celerybeat-schedule.db
