@@ -1,3 +1,4 @@
+"""hello"""
 from fastapi import Body, Query, APIRouter
 
 router = APIRouter(prefix="/hotels")

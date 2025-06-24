@@ -1,67 +1,8 @@
-from fastapi import FastAPI, Query, Body
+from fastapi import FastAPI
 import uvicorn
 
+
 app = FastAPI()
-hotels = [
-    {"id": 1, "title": "Дубай", "name": "Dubai"},
-    {"id": 2, "title": "Сочи", "name": "Sochi"},
-]
-
-
-@app.get("/")
-def func():
-    """return hello"""
-    return {"title": "Hello page!"}
-
-
-@app.delete("/hotels/{hotel_id}")
-def delete_hotel(id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel["id"] != id]
-    return {"status": "OK"}
-
-
-@app.put("/hotels/{hotel_id}")
-def change_hotel(id: int,
-                 title: str = Body(),
-                 name: str = Body()
-                 ):
-    for hotel in hotels:
-        if hotel["id"] == id:
-            hotel["title"] = title
-            hotel["name"] = name
-            return {"status": "OK"}
-        return {"status": "404 - Not Found"}
-
-
-@app.patch("/hotels/{hotel_id}")
-def change_hotel_lightly(id: int,
-                         title: str | None = Body(None),
-                         name: str | None = Body(None)
-                         ):
-    for hotel in hotels:
-        if hotel["id"] == id:
-            hotel["title"] = title or hotel["title"]
-            hotel["name"] = name or hotel["name"]
-            return {"status": "OK"}
-        return {"status": "404 - Not Found"}
-
-
-@app.get("/hotels",
-         summary="Просмотр всех отелей",
-         description="Много много премного текста")
-def get_hotels():
-    return [hotel for hotel in hotels]
-
-
-@app.post("/hotels")
-def add_hotel(title: str = Body(embed=True)):
-    hotels.append(
-        {
-            "id": hotels[-1]["id"] + 1,
-            "title": title
-        }
-    )
 
 
 if __name__ == "__main__":
