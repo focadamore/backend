@@ -1,7 +1,7 @@
-"""hello"""
 from fastapi import Body, Query, APIRouter
+from schemas.hotels import Hotels, HotelsPATCH
 
-router = APIRouter(prefix="/hotels")
+router = APIRouter(prefix="/hotels", tags=["Отели"])
 
 hotels = [
     {"id": 1, "title": "Дубай", "name": "Dubai"},
@@ -23,27 +23,21 @@ def delete_hotel(id: int):
 
 
 @router.put("/{hotel_id}", summary="Изменение всех данных отеля")
-def change_hotel(id: int = Query(description="ID Отеля"),
-                 title: str = Body(),
-                 name: str = Body()
-                 ):
+def change_hotel(hotel_id: int, hotel_data: Hotels):
     for hotel in hotels:
-        if hotel["id"] == id:
-            hotel["title"] = title
-            hotel["name"] = name
+        if hotel["id"] == hotel_id:
+            hotel["title"] = hotel_data.title
+            hotel["name"] = hotel_data.name
             return {"status": "OK"}
         return {"status": "404 - Not Found"}
 
 
 @router.patch("/{hotel_id}", summary="Изменение одного или нескольких тэгов отеля")
-def change_hotel_lightly(id: int,
-                         title: str | None = Body(None),
-                         name: str | None = Body(None)
-                         ):
+def change_hotel_lightly(id: int, hotel_data: HotelsPATCH):
     for hotel in hotels:
         if hotel["id"] == id:
-            hotel["title"] = title or hotel["title"]
-            hotel["name"] = name or hotel["name"]
+            hotel["title"] = hotel_data.title or hotel["title"]
+            hotel["name"] = hotel_data.name or hotel["name"]
             return {"status": "OK"}
         return {"status": "404 - Not Found"}
 
@@ -51,15 +45,28 @@ def change_hotel_lightly(id: int,
 @router.get("",
             summary="Просмотр всех отелей",
             description="Много много премного текста")
-def get_hotels():
-    return [hotel for hotel in hotels]
+def get_hotels(id: int | None = Query(None, description="id отеля"),
+               title: str | None = Query(None, description="Название отеля")
+               ):
+    hotels_ = []
+    for hotel in hotels:
+        if id and hotel["id"] != id:
+            continue
+        if title and hotel["title"] != title:
+            continue
+        hotels_.append(hotel)
+    return hotels_
 
 
 @router.post("", summary="Добавление нового отеля")
-def add_hotel(title: str = Body(embed=True)):
+def add_hotel(hotel_data: Hotels = Body(openapi_examples={
+    "1": {"summary": "Москва", "value": {"title": "Москва", "name": "Moscow"}},
+    "2": {"summary": "Симферополь", "value": {"title": "Симф", "name": "Simf"}}
+})):
     hotels.append(
         {
             "id": hotels[-1]["id"] + 1,
-            "title": title
+            "title": hotel_data.title,
+            "name": hotel_data.name
         }
     )
