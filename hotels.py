@@ -6,6 +6,11 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 hotels = [
     {"id": 1, "title": "Дубай", "name": "Dubai"},
     {"id": 2, "title": "Сочи", "name": "Sochi"},
+    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
+    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
+    {"id": 5, "title": "Москва", "name": "moscow"},
+    {"id": 6, "title": "Казань", "name": "kazan"},
+    {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
 ]
 
 
@@ -46,7 +51,9 @@ def change_hotel_lightly(id: int, hotel_data: HotelsPATCH):
             summary="Просмотр всех отелей",
             description="Много много премного текста")
 def get_hotels(id: int | None = Query(None, description="id отеля"),
-               title: str | None = Query(None, description="Название отеля")
+               title: str | None = Query(None, description="название отеля"),
+               page: int | None = Query(1, description="номер страницы"),
+               per_page: int | None = Query(2, description="количество записей на страницу")
                ):
     hotels_ = []
     for hotel in hotels:
@@ -55,7 +62,13 @@ def get_hotels(id: int | None = Query(None, description="id отеля"),
         if title and hotel["title"] != title:
             continue
         hotels_.append(hotel)
-    return hotels_
+    if page == 1:
+        start = page - 1
+        return hotels_[start:per_page]
+    else:
+        start = page + per_page - 2
+        limit = per_page * 2
+        return hotels_[start:limit]
 
 
 @router.post("", summary="Добавление нового отеля")
