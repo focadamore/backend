@@ -1,12 +1,9 @@
 from fastapi import Body, Query, APIRouter
-from sqlalchemy import insert, select, update, func
-from sqlalchemy.sql.operators import like_op
 
 from src.api.dependencies import PaginationDep
-from src.database import async_session_maker, engine
-from src.models.hotels import HotelsOrm
+from src.database import async_session_maker
+from src.repositories.hotels import HotelsRepository
 from src.schemas.hotels import Hotels, HotelsPATCH
-
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -53,33 +50,23 @@ async def get_hotels(pagination: PaginationDep,
                      ):
     per_page = pagination.per_page or 5
     async with async_session_maker() as session:
-        query = select(HotelsOrm)
-        if title:
-            query = query.where(func.lower(HotelsOrm.title).contains(func.lower(title)))
-        if location:
-            query = query.where(func.lower(HotelsOrm.location).contains(func.lower(location)))
-        query = (
-            query
-            .limit(per_page)
-            .offset(per_page * (pagination.page - 1))
+        return await HotelsRepository(session).get_all(
+            title=title,
+            location=location,
+            limit=per_page,
+            offset=per_page * (pagination.page - 1)
         )
-        print(query.compile(engine, compile_kwargs={"literal_binds": True}))
-        result = await session.execute(query)
-        hotels = result.scalars().all()
-        return hotels
-    # if pagination.page and pagination.per_page:
-    #     return hotels_[pagination.per_page * (pagination.page - 1):][:pagination.per_page]
-    # return hotels_
 
 
 @router.post("", summary="Добавление нового отеля")
 async def add_hotel(hotel_data: Hotels = Body(openapi_examples={
-    "1": {"summary": "Москва", "value": {"title": "Москва", "location": "Moscow"}},
-    "2": {"summary": "Симферополь", "value": {"title": "Симф", "location": "Simf"}}
+    "1": {"summary": "Дубай", "value": {"title": "Отель ХайСтар 4 звезды", "location": "Дубай, ул Центр 78"}},
+    "2": {"summary": "Ялта", "value": {"title": "Отель Magic 3 звезды", "location": "Ялта, ул Набережная 6"}}
 })):
     async with async_session_maker() as session:
-        add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
-        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
-        await session.execute(add_hotel_stmt)
+        hotel = await HotelsRepository(session).add(
+            title=hotel_data.title,
+            location=hotel_data.location
+        )
         await session.commit()
-        return {"http_status": 200, "response": "OK"}
+        return {"status": "OK", "data": hotel}
