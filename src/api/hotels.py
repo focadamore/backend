@@ -1,31 +1,26 @@
 from fastapi import Body, Query, APIRouter
+from sqlalchemy import insert, select, update, func
+from sqlalchemy.sql.operators import like_op
+
 from src.api.dependencies import PaginationDep
+from src.database import async_session_maker, engine
+from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotels, HotelsPATCH
 
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
-hotels = [
-    {"id": 1, "title": "Дубай", "name": "Dubai"},
-    {"id": 2, "title": "Сочи", "name": "Sochi"},
-    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
-    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
-    {"id": 5, "title": "Москва", "name": "moscow"},
-    {"id": 6, "title": "Казань", "name": "kazan"},
-    {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
-]
-
 
 @router.get("/", summary="Hello page")
-def func():
+def func_main():
     """return hello"""
     return {"title": "Hello page!"}
 
 
 @router.delete("/{hotel_id}", summary="Удаление отеля")
 def delete_hotel(id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel["id"] != id]
+    # global hotels
+    # hotels = [hotel for hotel in hotels if hotel["id"] != id]
     return {"status": "OK"}
 
 
@@ -52,31 +47,39 @@ def change_hotel_lightly(id: int, hotel_data: HotelsPATCH):
 @router.get("",
             summary="Просмотр всех отелей",
             description="Много много премного текста")
-def get_hotels(pagination: PaginationDep,
-               id: int | None = Query(None, description="id отеля"),
-               title: str | None = Query(None, description="название отеля")
-               ):
-    hotels_ = []
-    for hotel in hotels:
-        if id and hotel["id"] != id:
-            continue
-        if title and hotel["title"] != title:
-            continue
-        hotels_.append(hotel)
-    if pagination.page and pagination.per_page:
-        return hotels_[pagination.per_page * (pagination.page - 1):][:pagination.per_page]
-    return hotels_
+async def get_hotels(pagination: PaginationDep,
+                     title: str | None = Query(None, description="название отеля"),
+                     location: str | None = Query(None, description="локация отеля"),
+                     ):
+    per_page = pagination.per_page or 5
+    async with async_session_maker() as session:
+        query = select(HotelsOrm)
+        if title:
+            query = query.where(func.lower(HotelsOrm.title).contains(func.lower(title)))
+        if location:
+            query = query.where(func.lower(HotelsOrm.location).contains(func.lower(location)))
+        query = (
+            query
+            .limit(per_page)
+            .offset(per_page * (pagination.page - 1))
+        )
+        print(query.compile(engine, compile_kwargs={"literal_binds": True}))
+        result = await session.execute(query)
+        hotels = result.scalars().all()
+        return hotels
+    # if pagination.page and pagination.per_page:
+    #     return hotels_[pagination.per_page * (pagination.page - 1):][:pagination.per_page]
+    # return hotels_
 
 
 @router.post("", summary="Добавление нового отеля")
-def add_hotel(hotel_data: Hotels = Body(openapi_examples={
-    "1": {"summary": "Москва", "value": {"title": "Москва", "name": "Moscow"}},
-    "2": {"summary": "Симферополь", "value": {"title": "Симф", "name": "Simf"}}
+async def add_hotel(hotel_data: Hotels = Body(openapi_examples={
+    "1": {"summary": "Москва", "value": {"title": "Москва", "location": "Moscow"}},
+    "2": {"summary": "Симферополь", "value": {"title": "Симф", "location": "Simf"}}
 })):
-    hotels.append(
-        {
-            "id": hotels[-1]["id"] + 1,
-            "title": hotel_data.title,
-            "name": hotel_data.name
-        }
-    )
+    async with async_session_maker() as session:
+        add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
+        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
+        await session.execute(add_hotel_stmt)
+        await session.commit()
+        return {"http_status": 200, "response": "OK"}

@@ -3,9 +3,9 @@ from pydantic import BaseModel
 
 class Hotels(BaseModel):
     title: str
-    name: str
+    location: str
 
 
 class HotelsPATCH(BaseModel):
     title: str | None = None
-    name: str | None = None
+    location: str | None = None
