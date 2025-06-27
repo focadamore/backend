@@ -1,4 +1,4 @@
-from sqlalchemy import select, func, insert, delete, update
+from sqlalchemy import select, func
 from src.models.hotels import HotelsOrm
 from src.database import engine
 from src.repositories.base import BaseRepository
