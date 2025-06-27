@@ -2,6 +2,7 @@ from fastapi import Body, Query, APIRouter
 
 from src.api.dependencies import PaginationDep
 from src.database import async_session_maker
+from src.repositories.base import BaseRepository
 from src.repositories.hotels import HotelsRepository
 from src.schemas.hotels import Hotels, HotelsPATCH
 
@@ -15,20 +16,34 @@ def func_main():
 
 
 @router.delete("/{hotel_id}", summary="Удаление отеля")
-def delete_hotel(id: int):
-    # global hotels
-    # hotels = [hotel for hotel in hotels if hotel["id"] != id]
-    return {"status": "OK"}
+async def delete_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        found_hotels = await BaseRepository(session).get_all(id=hotel_id)
+        if not found_hotels:
+            return {"status": 404}
+        if len(found_hotels) > 1:
+            return {"status": 422}
+        else:
+            await HotelsRepository(session).delete(id=hotel_id)
+            await session.commit()
+            return {"status": 200}
 
 
 @router.put("/{hotel_id}", summary="Изменение всех данных отеля")
-def change_hotel(hotel_id: int, hotel_data: Hotels):
-    for hotel in hotels:
-        if hotel["id"] == hotel_id:
-            hotel["title"] = hotel_data.title
-            hotel["name"] = hotel_data.name
-            return {"status": "OK"}
-        return {"status": "404 - Not Found"}
+async def change_hotel(hotel_id: int, hotel_data: Hotels):
+    async with async_session_maker() as session:
+        found_hotels = await BaseRepository(session).get_all(id=hotel_id)
+        if not found_hotels:
+            return {"status": 404}
+        if len(found_hotels) > 1:
+            return {"status": 422}
+        else:
+            await HotelsRepository(session).edit(
+                id=hotel_id,
+                data=hotel_data
+            )
+            await session.commit()
+            return {"status": 200}
 
 
 @router.patch("/{hotel_id}", summary="Изменение одного или нескольких тэгов отеля")
@@ -62,11 +77,9 @@ async def get_hotels(pagination: PaginationDep,
 async def add_hotel(hotel_data: Hotels = Body(openapi_examples={
     "1": {"summary": "Дубай", "value": {"title": "Отель ХайСтар 4 звезды", "location": "Дубай, ул Центр 78"}},
     "2": {"summary": "Ялта", "value": {"title": "Отель Magic 3 звезды", "location": "Ялта, ул Набережная 6"}}
-})):
+})
+):
     async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).add(
-            title=hotel_data.title,
-            location=hotel_data.location
-        )
+        hotel = await HotelsRepository(session).add(hotel_data)
         await session.commit()
         return {"status": "OK", "data": hotel}
