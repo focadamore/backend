@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from passlib.context import CryptContext
+from sqlalchemy.exc import IntegrityError
 
 from src.database import async_session_maker
 from src.repositories.users import UsersRepository
