@@ -30,3 +30,8 @@ async def register_user(data: UsersRegisterAdd):
         await session.commit()
         return {"status": 200}
 
+
+@router.get("/only_auth", summary="тест Requests")
+async def only_auth(request: Request):
+    access_token = request.cookies.get("access_token")
+    return {"access_token": access_token or None}
