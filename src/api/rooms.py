@@ -11,7 +11,7 @@ async def get_rooms(db: DBDep, hotel_id: int):
     return await db.rooms.get_all(hotel_id=hotel_id)
 
 
-@router.get("/{hotel_id}/rooms/{room_id}", summary="Поиск отеля по id")
+@router.get("/{hotel_id}/rooms/{room_id}", summary="Поиск номера по id")
 async def get_room(db: DBDep, hotel_id: int, room_id: int):
     return await db.rooms.get_one_or_none(id=room_id, hotel_id=hotel_id)
 
