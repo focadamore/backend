@@ -4,7 +4,7 @@ from src.api.dependencies import PaginationDep
 from src.database import async_session_maker
 from src.repositories.base import BaseRepository
 from src.repositories.hotels import HotelsRepository
-from src.schemas.hotels import HotelsPATCH, HotelsAdd
+from src.schemas.hotels import HotelsAdd, HotelsPatch
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -70,7 +70,7 @@ async def change_hotel(hotel_id: int, hotel_data: HotelsAdd):
 
 
 @router.patch("/{hotel_id}", summary="Изменение одного или нескольких тэгов отеля")
-async def change_hotel_lightly(hotel_id: int, hotel_data: HotelsPATCH):
+async def change_hotel_partially(hotel_id: int, hotel_data: HotelsPatch):
     async with async_session_maker() as session:
         await HotelsRepository(session).edit(id=hotel_id, exclude_unset=True, data=hotel_data)
         await session.commit()
