@@ -19,7 +19,7 @@ class BaseRepository:
         return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
 
     async def get_all(self, *args, **kwargs):
-        return await self.get_filtered()
+        return await self.get_filtered(**kwargs)
 
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)

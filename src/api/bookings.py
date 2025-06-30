@@ -15,3 +15,15 @@ async def add_booking(user_id: UserIdDep, db: DBDep, bookings_data: BookingsAddR
     booking = await db.bookings.add(_bookings_data)
     await db.commit()
     return {"status": "OK", "data": booking}
+
+
+@router.get("", summary="Просмотр всех бронирований")
+async def get_all_bookings(db: DBDep):
+    bookings = await db.bookings.get_all()
+    return {"status": "OK", "data": bookings}
+
+
+@router.get("/me", summary="Просмотр моих бронирований")
+async def get_user_bookings(user_id: int, db: DBDep):
+    bookings = await db.bookings.get_all(user_id=user_id)
+    return {"status": "OK", "data": bookings}
