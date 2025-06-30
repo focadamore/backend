@@ -3,7 +3,6 @@ from datetime import date
 from sqlalchemy import select, func
 
 from src.models.hotels import HotelsOrm
-from src.database import engine
 from src.models.rooms import RoomsOrm
 from src.repositories.base import BaseRepository
 from src.repositories.utils import rooms_ids_to_get
