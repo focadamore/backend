@@ -26,7 +26,7 @@ class RoomsRepository(BaseRepository):
         result = await self.session.execute(query)
         return [RoomsWithRels.model_validate(model, from_attributes=True) for model in result.unique().scalars().all()]
 
-    async def get_hotel(self, hotel_id: int, room_id: int):
+    async def get_one_or_none(self, hotel_id: int, room_id: int):
         query = (
             select(self.model)
             .options(joinedload(self.model.facilities))
