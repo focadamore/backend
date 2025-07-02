@@ -6,7 +6,7 @@ from src.models.bookings import BookingsOrm
 from src.models.rooms import RoomsOrm
 
 
-def rooms_ids_to_get(
+def rooms_ids_for_booking(
         date_from: date,
         date_to: date,
         hotel_id: int | None = None
@@ -37,7 +37,7 @@ def rooms_ids_to_get(
 
     get_rooms_in_hotel = get_rooms_in_hotel.subquery(name="get_rooms_in_hotel")
 
-    rooms_for_get_filtered = (
+    rooms_ids_to_get = (
         select(rooms_free.c.rooms_id)
         .select_from(rooms_free)
         .filter(rooms_free.c.rooms_left > 0,
@@ -45,4 +45,4 @@ def rooms_ids_to_get(
                 )
     )
 
-    return rooms_for_get_filtered
+    return rooms_ids_to_get
