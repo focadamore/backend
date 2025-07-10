@@ -24,7 +24,7 @@ class Bookings(BookingsAdd):
 class BookingsPatchRequest(BaseModel):
     date_from: date | None = None
     date_to: date | None = None
-    price: date | None = None
+    price: int | None = None
 
 
 class BookingsPatch(BaseModel):
