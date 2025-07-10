@@ -1,11 +1,10 @@
 import asyncio
 from time import sleep
 
-from fastapi import UploadFile
 from PIL import Image
 import os
 
-from src.database import async_session_maker, async_session_maker_null_pool
+from src.database import async_session_maker_null_pool
 from src.tasks.celery_app import celery_instance
 from src.utils.db_manager import DBManager
 
