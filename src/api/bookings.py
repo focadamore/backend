@@ -20,8 +20,13 @@ async def get_user_bookings(user_id: int, db: DBDep):
 
 @router.post("", summary="Забронировать номер")
 async def add_booking(user_id: UserIdDep, db: DBDep, bookings_data: BookingsAddRequest):
-    actual_price = await db.rooms.get_one_or_none(id=bookings_data.room_id)
-    _bookings_data = BookingsAdd(**bookings_data.model_dump(), price=actual_price.price, user_id=user_id)
-    booking = await db.bookings.add(_bookings_data)
+    room = await db.rooms.get_one_or_none(id=bookings_data.room_id)
+    room_price: int = room.price
+    _booking_data = BookingsAdd(
+        user_id=user_id,
+        price=room_price,
+        **bookings_data.model_dump(),
+    )
+    booking = await db.bookings.add_booking(_booking_data)
     await db.commit()
     return {"status": "OK", "data": booking}
