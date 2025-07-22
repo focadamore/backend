@@ -1,4 +1,7 @@
 import json
+from unittest import mock
+
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
 
 import pytest
 from httpx import AsyncClient, ASGITransport
@@ -25,6 +28,7 @@ async def db() -> DBManager:
 async def get_db_null_pool() -> DBManager:
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
         yield db
+
 
 app.dependency_overrides[get_db] = get_db_null_pool
 
