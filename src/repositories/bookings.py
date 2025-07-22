@@ -2,7 +2,6 @@ from datetime import date
 
 from fastapi import HTTPException
 from sqlalchemy import select
-from starlette import status
 
 from src.models import RoomsOrm
 from src.models.bookings import BookingsOrm
@@ -26,32 +25,16 @@ class BookingsRepository(BaseRepository):
 
     async def add_booking(self, booking_data: BookingsAdd):
         room = await self.session.get(RoomsOrm, booking_data.room_id)
-        # Получаем список доступных комнат в отеле на указанные даты
-        available_rooms_query = rooms_ids_for_booking(
+        rooms_ids_to_get = rooms_ids_for_booking(
             date_from=booking_data.date_from,
             date_to=booking_data.date_to,
-            hotel_id=room.hotel_id
+            hotel_id=room.hotel_id,
         )
+        rooms_ids_to_book_res = await self.session.execute(rooms_ids_to_get)
+        rooms_ids_to_book: list[int] = rooms_ids_to_book_res.scalars().all()
 
-        available_rooms_query = available_rooms_query.where(RoomsOrm.id == booking_data.room_id)
-
-        result = await self.session.execute(available_rooms_query)
-
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Комната недоступна для бронирования на указанные даты"
-            )
-
-        new_booking = BookingsOrm(
-            user_id=booking_data.user_id,
-            room_id=booking_data.room_id,
-            date_from=booking_data.date_from,
-            date_to=booking_data.date_to,
-            price=booking_data.price
-        )
-
-        self.session.add(new_booking)
-        await self.session.flush()
-        await self.session.refresh(new_booking)
-        return BookingsDataMapper.map_to_domain_entity(new_booking)
+        if booking_data.room_id in rooms_ids_to_book:
+            new_booking = await self.add(booking_data)
+            return new_booking
+        else:
+            raise HTTPException(500)
