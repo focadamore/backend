@@ -1,4 +1,5 @@
 import json
+from typing import AsyncGenerator
 from unittest import mock
 
 mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
@@ -53,31 +54,19 @@ async def setup_database(check_test_mode):
 
 
 @pytest.fixture(scope="session")
-async def ac() -> AsyncClient:
+async def ac() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def register_user(ac, setup_database):
-    await ac.post(
-        "/auth/register",
-        json={
-            "email": "ant@mail.ru",
-            "password": "1234"
-        }
-    )
+async def register_user(ac: AsyncClient, setup_database):
+    await ac.post("/auth/register", json={"email": "ant@mail.ru", "password": "1234"})
 
 
 @pytest.fixture(scope="session")
-async def authenticated_ac(ac, register_user):
-    response = await ac.post(
-        "auth/login",
-        json={
-            "email": "ant@mail.ru",
-            "password": "1234"
-        }
-    )
+async def authenticated_ac(ac: AsyncClient, register_user):
+    await ac.post("/auth/login", json={"email": "ant@mail.ru", "password": "1234"})
     assert "access_token" in ac.cookies
     assert ac.cookies["access_token"]
     yield ac

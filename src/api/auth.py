@@ -36,7 +36,7 @@ async def register_user(data: UsersRegisterAdd):
         return {"status": 200}
 
 
-@router.get("/get_me", summary="тест Requests")
+@router.get("/me", summary="тест Requests")
 async def get_me(user_id: UserIdDep):
     async with async_session_maker() as session:
         user = await UsersRepository(session).get_one_or_none(id=user_id)
