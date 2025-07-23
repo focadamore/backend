@@ -8,6 +8,3 @@ def test_create_and_decode_access_token():
 
     assert payload
     assert payload["user_id"] == data["user_id"]
-
-
-

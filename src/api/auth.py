@@ -31,7 +31,10 @@ async def register_user(data: UsersRegisterAdd):
     hashed_password = AuthService().hash_password(data.password)
     new_user_data = UsersAdd(email=data.email, hashed_password=hashed_password)
     async with async_session_maker() as session:
-        await UsersRepository(session).add(new_user_data)
+        try:
+            await UsersRepository(session).add(new_user_data)
+        except Exception:
+            raise HTTPException(status_code=400)
         await session.commit()
         return {"status": 200}
 
