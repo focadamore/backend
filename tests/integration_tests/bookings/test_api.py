@@ -5,6 +5,7 @@ from sqlalchemy import delete
 from src.database import async_session_maker_null_pool
 from src.models import BookingsOrm
 from src.utils.db_manager import DBManager
+from tests.conftest import get_db_null_pool
 
 
 @pytest.mark.parametrize(
@@ -38,13 +39,18 @@ async def test_add_booking(
 
 
 @pytest.fixture(scope="session")
-async def delete_bookings(ac):
+async def delete_all_bookings(ac):
     async with async_session_maker_null_pool() as session:
         async with session.begin():
             await session.execute(delete(BookingsOrm))
     response = await ac.get("/bookings")
-    print(f"Я Запустился! {response=}")
+    print(f"Я Запустился!")
     assert response.status_code == 200
+# @pytest.fixture(scope="module")
+# async def delete_all_bookings():
+#     async for _db in get_db_null_pool():
+#         await _db.bookings.delete()
+#         await _db.commit()
 
 
 @pytest.mark.parametrize(
@@ -60,7 +66,7 @@ async def test_add_and_get_my_bookings(
     date_from,
     date_to,
     booked_rooms,
-    delete_bookings,
+    delete_all_bookings,
     authenticated_ac: AsyncClient,
 ):
     response = await authenticated_ac.post(
@@ -73,6 +79,6 @@ async def test_add_and_get_my_bookings(
     )
     assert response.status_code == 200
 
-    response_me = await authenticated_ac.get("/bookings/me?user_id=1")
+    response_me = await authenticated_ac.get("/bookings/me")
     assert response_me.status_code == 200
     assert len(response_me.json()) == booked_rooms

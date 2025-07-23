@@ -20,14 +20,14 @@ async def check_test_mode():
     assert settings.MODE == "TEST"
 
 
-@pytest.fixture(scope="function")
-async def db() -> DBManager:
+async def get_db_null_pool():
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
         yield db
 
 
-async def get_db_null_pool() -> DBManager:
-    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+@pytest.fixture(scope="function")
+async def db() -> AsyncGenerator[DBManager, None]:
+    async for db in get_db_null_pool():
         yield db
 
 
