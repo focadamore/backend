@@ -1,8 +1,9 @@
+from asyncpg import UniqueViolationError, ForeignKeyViolationError
 from pydantic import BaseModel
 from sqlalchemy import select, insert, delete, update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 
-from src.exceptions import ObjectNotFoundException
+from src.exceptions import ObjectNotFoundException, ObjectAlreadyExistsException
 from src.repositories.mappers.base import DataMapper
 
 
@@ -40,9 +41,16 @@ class BaseRepository:
 
     async def add(self, data: BaseModel):
         add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        result = await self.session.execute(add_data_stmt)
-        model = result.scalars().one_or_none()
-        return self.mapper.map_to_domain_entity(model)
+        try:
+            result = await self.session.execute(add_data_stmt)
+            model = result.scalars().one_or_none()
+            return self.mapper.map_to_domain_entity(model)
+        except IntegrityError as ex:
+            if isinstance(ex.orig.__cause__, UniqueViolationError):
+                raise ObjectAlreadyExistsException
+            elif isinstance(ex.orig.__cause__, ForeignKeyViolationError):
+                raise ObjectNotFoundException
+
 
     async def add_bulk(self, data: list[BaseModel]):
         add_data_stmt = insert(self.model).values([item.model_dump() for item in data])
@@ -54,7 +62,10 @@ class BaseRepository:
             .filter_by(**filter_by)
             .values(**data.model_dump(exclude_unset=exclude_unset))
         )
-        await self.session.execute(edit_data_stmt)
+        try:
+            await self.session.execute(edit_data_stmt)
+        except IntegrityError as ex:
+            raise ObjectNotFoundException
 
     async def delete(self, **filter_by) -> None:
         delete_data_stmt = delete(self.model).filter_by(**filter_by)

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Response, Body
 
 from src.api.dependencies import UserIdDep
 from src.database import async_session_maker
+from src.exceptions import ObjectAlreadyExistsException
 from src.repositories.users import UsersRepository
 from src.schemas.users import UsersRegisterAdd, UsersAdd
 from src.services.auth import AuthService
@@ -36,8 +37,8 @@ async def register_user(data: UsersRegisterAdd):
     async with async_session_maker() as session:
         try:
             await UsersRepository(session).add(new_user_data)
-        except Exception:
-            raise HTTPException(status_code=400)
+        except ObjectAlreadyExistsException:
+            raise HTTPException(status_code=409, detail="Пользователь с таким email уже зарегистрирован")
         await session.commit()
         return {"status": 200}
 

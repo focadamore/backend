@@ -3,6 +3,7 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 
+from src.exceptions import InvalidDatesRangeException
 from src.models.rooms import RoomsOrm
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import RoomsDataMapper
@@ -15,6 +16,8 @@ class RoomsRepository(BaseRepository):
     mapper = RoomsDataMapper
 
     async def get_filtered_by_time(self, hotel_id: int, date_from: date, date_to: date):
+        if date_to < date_from:
+            raise InvalidDatesRangeException
         rooms_for_get_filtered = rooms_ids_for_booking(date_from, date_to, hotel_id)
         query = (
             select(self.model)
