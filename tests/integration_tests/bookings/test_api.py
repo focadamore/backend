@@ -5,7 +5,6 @@ from sqlalchemy import delete
 from src.database import async_session_maker_null_pool
 from src.models import BookingsOrm
 from src.utils.db_manager import DBManager
-from tests.conftest import get_db_null_pool
 
 
 @pytest.mark.parametrize(
@@ -44,7 +43,6 @@ async def delete_all_bookings(ac):
         async with session.begin():
             await session.execute(delete(BookingsOrm))
     response = await ac.get("/bookings")
-    print(f"Я Запустился!")
     assert response.status_code == 200
 # @pytest.fixture(scope="module")
 # async def delete_all_bookings():

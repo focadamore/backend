@@ -29,6 +29,8 @@ async def test_user_auth(email: str, password: str, status_code: int, ac: AsyncC
     response_me = await ac.get("/auth/me")
     assert response_me.json()["id"]
     assert response_me.json()["email"] == email
+    assert "password" not in response_me.json()
+    assert "hashed_password" not in response_me.json()
 
     # logout
     response_logout = await ac.post("/auth/logout")

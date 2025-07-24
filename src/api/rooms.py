@@ -4,7 +4,7 @@ from fastapi import Body, APIRouter, Query
 
 from src.api.dependencies import DBDep
 from src.schemas.facilities import RoomsFacilitiesAdd
-from src.schemas.rooms import RoomsAdd, RoomsAddRequest, RoomsPatchRequest, RoomsPatch
+from src.schemas.rooms import RoomsAdd, RoomsAddRequest, RoomsPatchRequest
 
 router = APIRouter(prefix="/hotels", tags=["Номера отелей"])
 
