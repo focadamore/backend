@@ -3,6 +3,7 @@ from datetime import date
 from fastapi import HTTPException
 from sqlalchemy import select
 
+from src.exceptions import NoFreeRoomsLeftException
 from src.models import RoomsOrm
 from src.models.bookings import BookingsOrm
 from src.repositories.base import BaseRepository
@@ -33,5 +34,5 @@ class BookingsRepository(BaseRepository):
         if booking_data.room_id in rooms_ids_to_book:
             new_booking = await self.add(booking_data)
             return new_booking
-        else:
-            raise HTTPException(500)
+
+        raise NoFreeRoomsLeftException

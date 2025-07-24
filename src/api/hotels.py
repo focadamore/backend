@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import Body, Query, APIRouter
 
 from src.api.dependencies import PaginationDep, DBDep
-from src.schemas.hotels import HotelsAdd, HotelsPatch
+from src.schemas.hotels import HotelsAdd, HotelsPatch, Hotels
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -55,7 +55,7 @@ async def add_hotel(
         }
     ),
 ):
-    hotel = await db.hotels.add(hotel_data)
+    hotel: Hotels = await db.hotels.add(hotel_data)
     return {"status": "OK", "data": hotel}
 
 
