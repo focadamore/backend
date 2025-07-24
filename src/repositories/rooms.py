@@ -14,10 +14,7 @@ class RoomsRepository(BaseRepository):
     model = RoomsOrm
     mapper = RoomsDataMapper
 
-    async def get_filtered_by_time(self,
-                                   hotel_id: int,
-                                   date_from: date,
-                                   date_to: date):
+    async def get_filtered_by_time(self, hotel_id: int, date_from: date, date_to: date):
         rooms_for_get_filtered = rooms_ids_for_booking(date_from, date_to, hotel_id)
         query = (
             select(self.model)
@@ -25,7 +22,10 @@ class RoomsRepository(BaseRepository):
             .filter(RoomsOrm.id.in_(rooms_for_get_filtered))
         )
         result = await self.session.execute(query)
-        return [RoomsWithRels.model_validate(model, from_attributes=True) for model in result.unique().scalars().all()]
+        return [
+            RoomsWithRels.model_validate(model, from_attributes=True)
+            for model in result.unique().scalars().all()
+        ]
 
     async def get_one_or_none(self, **filter_by):
         query = (

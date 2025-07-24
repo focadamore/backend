@@ -9,7 +9,9 @@ from src.utils.db_manager import DBManager
 
 class PaginationParams(BaseModel):
     page: Annotated[int | None, Query(1, description="номер страницы", ge=1)]
-    per_page: Annotated[int | None, Query(None, description="количество записей на страницу", ge=1, lt=30)]
+    per_page: Annotated[
+        int | None, Query(None, description="количество записей на страницу", ge=1, lt=30)
+    ]
 
 
 PaginationDep = Annotated[PaginationParams, Depends()]
@@ -37,5 +39,6 @@ def get_db_manager():
 async def get_db():
     async with get_db_manager() as db:
         yield db
+
 
 DBDep = Annotated[DBManager, Depends(get_db)]

@@ -15,7 +15,7 @@ from src.utils.db_manager import DBManager
         (1, "2024-08-03", "2024-08-12", 200),
         (1, "2024-08-04", "2024-08-13", 200),
         (1, "2024-08-05", "2024-08-14", 200),
-        (1, "2024-08-06", "2024-08-15", 500)
+        (1, "2024-08-06", "2024-08-15", 500),
     ],
 )
 async def test_add_booking(
@@ -44,6 +44,8 @@ async def delete_all_bookings(ac):
             await session.execute(delete(BookingsOrm))
     response = await ac.get("/bookings")
     assert response.status_code == 200
+
+
 # @pytest.fixture(scope="module")
 # async def delete_all_bookings():
 #     async for _db in get_db_null_pool():

@@ -20,15 +20,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.alter_column(
-        "users", "phone", existing_type=sa.VARCHAR(length=20), nullable=True
-    )
+    op.alter_column("users", "phone", existing_type=sa.VARCHAR(length=20), nullable=True)
     op.create_unique_constraint(None, "users", ["email"])
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_constraint(None, "users", type_="unique")
-    op.alter_column(
-        "users", "phone", existing_type=sa.VARCHAR(length=20), nullable=True
-    )
+    op.alter_column("users", "phone", existing_type=sa.VARCHAR(length=20), nullable=True)

@@ -10,11 +10,14 @@ router = APIRouter(prefix="/auth", tags=["Аутентификация и авт
 
 
 @router.post("/login", summary="Аутентификация")
-async def login_user(response: Response, data: UsersRegisterAdd = Body(openapi_examples={
-    "1": {"summary": "Я",
-          "value": {"email": "me@mail.ru",
-                    "password": "123"}}
-})):
+async def login_user(
+    response: Response,
+    data: UsersRegisterAdd = Body(
+        openapi_examples={
+            "1": {"summary": "Я", "value": {"email": "me@mail.ru", "password": "123"}}
+        }
+    ),
+):
     async with async_session_maker() as session:
         user = await UsersRepository(session).get_user_with_hashed_password(email=data.email)
         if not user:

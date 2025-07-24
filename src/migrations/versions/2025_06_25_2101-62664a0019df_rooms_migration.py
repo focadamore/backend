@@ -28,11 +28,7 @@ def upgrade() -> None:
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("price", sa.Integer(), nullable=False),
         sa.Column("quantity", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["hotel_id"],
-            ["hotels.id"],
-            name="fk_rooms_hotels_id"
-        ),
+        sa.ForeignKeyConstraint(["hotel_id"], ["hotels.id"], name="fk_rooms_hotels_id"),
         sa.PrimaryKeyConstraint("id"),
     )
 

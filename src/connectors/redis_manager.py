@@ -12,7 +12,7 @@ class RedisManager:
         self.client = redis.Redis(
             host=self.host,
             port=self.port,
-            decode_responses=True  # Автоматически декодировать ответы в строки
+            decode_responses=True,  # Автоматически декодировать ответы в строки
         )
         try:
             await self.client.ping()
