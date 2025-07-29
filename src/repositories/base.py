@@ -47,9 +47,11 @@ class BaseRepository:
             return self.mapper.map_to_domain_entity(model)
         except IntegrityError as ex:
             if isinstance(ex.orig.__cause__, UniqueViolationError):
-                raise ObjectAlreadyExistsException
+                raise ObjectAlreadyExistsException from ex
             elif isinstance(ex.orig.__cause__, ForeignKeyViolationError):
-                raise ObjectNotFoundException
+                raise ObjectNotFoundException from ex
+            else:
+                raise ex
 
 
     async def add_bulk(self, data: list[BaseModel]):
@@ -65,7 +67,7 @@ class BaseRepository:
         try:
             await self.session.execute(edit_data_stmt)
         except IntegrityError as ex:
-            raise ObjectNotFoundException
+            raise ObjectNotFoundException from ex
 
     async def delete(self, **filter_by) -> None:
         delete_data_stmt = delete(self.model).filter_by(**filter_by)

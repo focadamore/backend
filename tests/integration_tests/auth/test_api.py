@@ -7,7 +7,7 @@ from httpx import AsyncClient
     [
         ("test@mail.ru", "12345", 200),
         ("testtwo@mail.ru", "12345", 200),
-        ("test@mail.ru", "123456", 400),
+        ("test@mail.ru", "123456", 409),
         ("abcde", "1212121", 422),
     ],
 )

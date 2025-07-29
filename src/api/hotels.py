@@ -4,7 +4,8 @@ from fastapi import Body, Query, APIRouter, HTTPException
 
 from src.api.dependencies import PaginationDep, DBDep
 from src.exceptions import InvalidDatesRangeException, ObjectNotFoundException
-from src.schemas.hotels import HotelsAdd, HotelsPatch, Hotels
+from src.schemas.hotels import HotelsAdd, HotelsPatch
+from src.services.hotels import HotelService
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -12,10 +13,10 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 @router.get("/{hotel_id}", summary="Поиск отеля по id")
 async def get_hotel(db: DBDep, hotel_id: int):
     try:
-        hotel_data = await db.hotels.get_one(id=hotel_id)
+        hotel_data = await HotelService(db).get_hotel(hotel_id=hotel_id)
+        return hotel_data
     except ObjectNotFoundException:
         raise HTTPException(status_code=404, detail="Отель с указанными параметрами не найден")
-    return hotel_data
 
 
 @router.get("", summary="Просмотр всех отелей", description="Много много премного текста")
@@ -27,19 +28,17 @@ async def get_hotels(
         date_from: date = Query(examples=["2025-06-29"]),
         date_to: date = Query(examples=["2025-07-10"]),
 ):
-    per_page = pagination.per_page or 5
     try:
-        hotel_data = await db.hotels.get_filtered_by_time(
-            title=title,
-            location=location,
-            limit=per_page,
-            offset=per_page * (pagination.page - 1),
-            date_from=date_from,
-            date_to=date_to,
+        hotel_data = await HotelService(db).get_filtered_by_time(
+            pagination,
+            title,
+            location,
+            date_from,
+            date_to
         )
+        return hotel_data
     except InvalidDatesRangeException as ex:
         raise HTTPException(status_code=400, detail=ex.detail)
-    return hotel_data
 
 
 @router.post("", summary="Добавление нового отеля")
@@ -58,22 +57,23 @@ async def add_hotel(
             }
         ),
 ):
-    hotel: Hotels = await db.hotels.add(hotel_data)
+    hotel = await HotelService(db).add_hotel(hotel_data)
     return {"status": "OK", "data": hotel}
 
 
 @router.delete("/{hotel_id}", summary="Удаление отеля")
 async def delete_hotel(db: DBDep, hotel_id: int):
-    await db.hotels.delete(id=hotel_id)
+    await HotelService(db).delete_hotel(hotel_id)
+    return {"status": 200}
 
 
 @router.put("/{hotel_id}", summary="Изменение всех данных отеля")
 async def change_hotel(db: DBDep, hotel_id: int, hotel_data: HotelsAdd):
-    await db.hotels.edit(id=hotel_id, data=hotel_data)
+    await HotelService(db).change_hotel(hotel_id, hotel_data)
     return {"status": 200}
 
 
 @router.patch("/{hotel_id}", summary="Изменение одного или нескольких тэгов отеля")
 async def change_hotel_partially(db: DBDep, hotel_id: int, hotel_data: HotelsPatch):
-    await db.hotels.edit(id=hotel_id, exclude_unset=True, data=hotel_data)
+    await HotelService(db).change_hotel_partially(hotel_id, hotel_data)
     return {"status": 200}

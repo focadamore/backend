@@ -16,7 +16,7 @@ class RoomsRepository(BaseRepository):
     mapper = RoomsDataMapper
 
     async def get_filtered_by_time(self, hotel_id: int, date_from: date, date_to: date):
-        if date_to < date_from:
+        if date_to <= date_from:
             raise InvalidDatesRangeException
         rooms_for_get_filtered = rooms_ids_for_booking(date_from, date_to, hotel_id)
         query = (
