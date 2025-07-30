@@ -1,7 +1,4 @@
 
-
-
-
 docker network create myNetwork
 
 docker run --name booking_db \
